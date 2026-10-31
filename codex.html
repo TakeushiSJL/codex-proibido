@@ -697,11 +697,13 @@ input[type="search"], input[type="text"], input:not([type]), textarea { cursor: 
 .busy::before { content: ""; width: 18px; height: 18px; border-radius: 50%; border: 3px solid var(--gold); border-right-color: transparent; animation: spin .8s linear infinite; }
 
 /* ---------- símbolos do fundo respirando: cada símbolo acende e apaga sozinho, em ondas que passam pela página ---------- */
-#glyphs { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
-.gl { position: absolute; background: no-repeat center / contain; opacity: 0; animation: breath var(--d) ease-in-out var(--dl) infinite; }
-/* cada região fica acesa só por um trecho do ciclo (inspira devagar, expira devagar) e apagada no resto */
-@keyframes breath { 0% { opacity: 0; } 9% { opacity: var(--pk); } 20%, 100% { opacity: 0; } }
-@media print { #glyphs { display: none; } }
+@property --mx { syntax: "<length>"; inherits: false; initial-value: -999px; }
+@property --my { syntax: "<length>"; inherits: false; initial-value: -999px; }
+#glyphs { position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity .7s ease;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cdefs%3E%3Cfilter id='b' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeGaussianBlur stdDeviation='2'/%3E%3C/filter%3E%3Cg id='s'%3E%3Cpath d='M18 56 L36 24 L54 56 Z M36 24 L36 56'/%3E%3Cellipse cx='104' cy='22' rx='7' ry='9'/%3E%3Cpath d='M104 31 V58 M93 40 H115'/%3E%3Cpath d='M60 104 Q76 90 92 104 Q76 118 60 104 Z'/%3E%3Ccircle cx='76' cy='104' r='4.5'/%3E%3Cpath d='M76 112 V124 M70 120 L76 126'/%3E%3Cpath d='M14 118 l7 -7 l7 7 l-7 7 z'/%3E%3C/g%3E%3C/defs%3E%3Cg fill='none' stroke='%23FFD978' stroke-linejoin='round' stroke-linecap='round'%3E%3Cuse href='%23s' filter='url(%23b)' stroke-width='4' stroke-opacity='.5'/%3E%3Cuse href='%23s' stroke-width='1.6'/%3E%3C/g%3E%3C/svg%3E");
+  -webkit-mask-image: radial-gradient(circle 230px at var(--mx) var(--my), #000 0, rgba(0, 0, 0, .4) 45%, transparent 100%);
+  mask-image: radial-gradient(circle 230px at var(--mx) var(--my), #000 0, rgba(0, 0, 0, .4) 45%, transparent 100%); }
+#glyphs.on { opacity: .5; transition: opacity .7s ease, --mx .3s ease-out, --my .3s ease-out; }@media print { #glyphs { display: none; } }
 
 /* ---------- abertura: brilho atrás das cartas girando e respirando; nome com entrelinha justa ---------- */
 /* os raios giram sem parar e, junto com o clarão do meio, inspiram (acendem e crescem) e expiram (apagam e encolhem) */
@@ -783,6 +785,15 @@ footer .credit b { color: var(--gold); }
 @media print { .slot-empty .se-eye { animation: none; } }
 @media print { body::after, .sun::after, .hp-box { animation: none; } .themed::before, .themed .fan img { transition: none; } }
 
+/* passos da fusão: o sinal fica na altura do meio da carta (e não do nome), e o passo 3 tem um sinal invisível do outro lado para a carta ficar no centro */
+.steps .art:has(.thumb) { align-items: flex-start; }
+.steps .art:has(.thumb) .op { margin-top: 39px; }
+.opghost { visibility: hidden; }
+/* abertura: a busca e a fileira de botões com a mesma largura */
+.hh-text .bigsearch, .hh-text .quick { width: min(600px, 100%); }
+.hh-text .quick { flex-wrap: nowrap; }
+.hh-text .quick > .btn { flex: 1 1 auto; justify-content: center; white-space: nowrap; }
+@media (max-width: 600px) { .hh-text .quick { flex-wrap: wrap; } }
 /* ---------- olho dos dois lados do título ---------- */
 .head h2::after { content: ""; display: inline-block; width: 28px; height: 16px; margin-left: 10px; vertical-align: 2px;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 32'%3E%3Cpath d='M4 16 Q28 -2 52 16 Q28 34 4 16 Z' fill='none' stroke='%23F1C24A' stroke-width='3'/%3E%3Ccircle cx='28' cy='16' r='6' fill='%23F1C24A'/%3E%3C/svg%3E") center / contain no-repeat; }
@@ -2967,7 +2978,7 @@ function viewInicio() {
     <div class="steps">
       <div class="panel step"><span class="num">1</span><div class="art">${thumb(4)}${op('+', true)}${thumb(458)}</div><h3>Escolha duas cartas</h3><p>Na sua vez, junte duas cartas da mão, ou uma da mão com o monstro que já está em campo.</p></div>
       <div class="panel step"><span class="num">2</span><div class="art"><img class="bigicon" src="${IMG}tipos/dragon.webp" alt="Dragão">${op('+', true)}<img class="bigicon" src="${IMG}tipos/thunder.webp" alt="Trovão"></div><h3>O jogo olha o tipo</h3><p>Quase toda fusão depende do tipo das cartas. Aqui é um Dragão com um Trovão.</p></div>
-      <div class="panel step"><span class="num">3</span><div class="art">${op('=', true)}${fuse(4, 458) ? thumb(fuse(4, 458)) : ''}</div><h3>Nasce uma carta mais forte</h3><p>Sai um monstro com mais ATK que as duas. Com 3 cartas ou mais, dá para fundir em cadeia.</p></div>
+      <div class="panel step"><span class="num">3</span><div class="art">${op('=', true)}${fuse(4, 458) ? thumb(fuse(4, 458)) : ''}<span class="opghost" aria-hidden="true">${op('=', true)}</span></div><h3>Nasce uma carta mais forte</h3><p>Sai um monstro com mais ATK que as duas. Com 3 cartas ou mais, dá para fundir em cadeia.</p></div>
     </div></section>
   <section class="sec"><div class="head"><h2>Explore por tipo</h2><p class="sub">Clique num ícone para ver só as cartas daquele tipo.</p></div>
     <div class="icons compact">${typeIcons()}</div><h3>Elementos</h3><div class="icons compact">${elemIcons()}</div><h3>Magias, armadilhas e outras</h3><div class="icons compact">${kindIcons()}</div></section>
@@ -3166,7 +3177,9 @@ async function scanPrint(file) {
     const s = await readSlot(pick.x0, i, ['gold', 'light', 'raw', 'dark']);
     if (s.best && (!pick.slots[i].best || s.best.score > pick.slots[i].best.score)) pick.slots[i] = s;
   }
-  const res = pick.slots.map((s, i) => ({ crop: cropName(img, geo, pick.x0, i, 'raw').toDataURL('image/jpeg', .8), read: s.read, id: s.best ? s.best.id : null }));
+  // leitura fraca vira "não reconheci" (melhor a pessoa escolher a carta do que o Códex mostrar uma carta errada);
+  // acontece com artes especiais, em que o nome fica por cima de um desenho muito colorido
+  const res = pick.slots.map((s, i) => ({ crop: cropName(img, geo, pick.x0, i, 'raw').toDataURL('image/jpeg', .8), read: s.read, id: good(s) ? s.best.id : null }));
   URL.revokeObjectURL(url); return res;
 }
 // ícones dos botões (traço simples, herdam a cor do texto)
@@ -3633,40 +3646,21 @@ pkGrid.addEventListener('click', e => { const b = e.target.closest('[data-pick]'
 document.getElementById('pk-close').addEventListener('click', () => dlg.close());
 dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
 
-/* símbolos do fundo que respiram: cada olho, ankh, pirâmide e losango do papel de parede ganha uma cópia luminosa
-   que acende e apaga sozinha; o ritmo muda aos poucos pela tela, então a luz anda em ondas pela página */
-const GLYPH_SHAPES = [
-  // [x, y, largura, altura] do símbolo dentro do ladrilho de 140 px do fundo, e o desenho
-  [10, 16, 52, 48, `<path d='M18 56 L36 24 L54 56 Z M36 24 L36 56'/>`],
-  [85, 5, 38, 61, `<ellipse cx='104' cy='22' rx='7' ry='9'/><path d='M104 31 V58 M93 40 H115'/>`],
-  [52, 88, 48, 45, `<path d='M60 104 Q76 90 92 104 Q76 118 60 104 Z'/><circle cx='76' cy='104' r='4.5'/><path d='M76 112 V124 M70 120 L76 126'/>`],
-  [6, 103, 30, 30, `<path d='M14 118 l7 -7 l7 7 l-7 7 z'/>`]
-].map(([x, y, w, h, d]) => {
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='${x} ${y} ${w} ${h}'><defs><filter id='b' x='-50%' y='-50%' width='200%' height='200%'><feGaussianBlur stdDeviation='2.4'/></filter></defs><g fill='none' stroke='%23FFD978' stroke-linejoin='round' stroke-linecap='round'><g filter='url(%23b)' stroke-width='4' stroke-opacity='.5'>${d}</g><g stroke-width='1.6'>${d}</g></g></svg>`;
-  return { x, y, w, h, url: `url("data:image/svg+xml,${svg.replace(/</g, '%3C').replace(/>/g, '%3E')}")` };
-});
-document.head.insertAdjacentHTML('beforeend', `<style>${GLYPH_SHAPES.map((g, k) => `.gl.g${k}{width:${g.w}px;height:${g.h}px;background-image:${g.url}}`).join('')}</style>`);
-function buildGlyphs() {
-  const box = document.getElementById('glyphs'); if (!box) return;
-  const W = innerWidth, H = innerHeight, cols = Math.ceil(W / 140), rows = Math.ceil(H / 140); let h = '';
-  // a luz acende uma região por vez (canto de cima à direita, centro, embaixo à esquerda...) e o resto fica apagado;
-  // cada símbolo pertence à região mais próxima e brilha menos quanto mais longe do centro dela
-  const zones = [[.8, .22], [.48, .55], [.18, .8], [.2, .25], [.78, .78], [.5, .15]].map(([x, y]) => [x * W, y * H]);
-  const D = 24, slot = D / zones.length;
-  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) GLYPH_SHAPES.forEach((g, k) => {
-    const x = c * 140 + g.x + g.w / 2, y = r * 140 + g.y + g.h / 2;
-    let zi = 0, best = Infinity; zones.forEach(([zx, zy], i) => { const d = Math.hypot(x - zx, y - zy); if (d < best) { best = d; zi = i; } });
-    const peak = .3 * Math.exp(-best / 230); if (peak < .025) return;
-    const delay = -(D - zi * slot - best / 400 - Math.random() * .6).toFixed(2);
-    h += `<i class="gl g${k}" style="left:${c * 140 + g.x}px;top:${r * 140 + g.y}px;--d:${D}s;--dl:${delay}s;--pk:${peak.toFixed(3)}"></i>`;
+/* símbolos do fundo: acendem só perto do mouse, como uma lanterna; longe dele, ficam apagados */
+const glyphs = document.getElementById('glyphs'); let gRaf = 0, gX = 0, gY = 0;
+addEventListener('pointermove', e => {
+  if (e.pointerType === 'touch') return;
+  gX = e.clientX; gY = e.clientY;
+  if (gRaf) return;
+  gRaf = requestAnimationFrame(() => {
+    gRaf = 0; glyphs.style.setProperty('--mx', gX + 'px'); glyphs.style.setProperty('--my', gY + 'px');
+    // na primeira vez a luz aparece direto no mouse; depois acompanha com um pequeno atraso
+    if (!glyphs.classList.contains('on')) requestAnimationFrame(() => glyphs.classList.add('on'));
   });
-  box.innerHTML = h;
-}
-let glyphT; addEventListener('resize', () => { clearTimeout(glyphT); glyphT = setTimeout(buildGlyphs, 300); });
-
+}, { passive: true });
+document.documentElement.addEventListener('mouseleave', () => glyphs.classList.remove('on'));
 buildNav();
 route();
-buildGlyphs();
 </script>
 
 </body></html>
