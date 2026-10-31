@@ -699,7 +699,8 @@ input[type="search"], input[type="text"], input:not([type]), textarea { cursor: 
 /* ---------- símbolos do fundo respirando: cada símbolo acende e apaga sozinho, em ondas que passam pela página ---------- */
 #glyphs { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
 .gl { position: absolute; background: no-repeat center / contain; opacity: 0; animation: breath var(--d) ease-in-out var(--dl) infinite; }
-@keyframes breath { 0%, 100% { opacity: 0; } 50% { opacity: var(--pk); } }
+/* cada região fica acesa só por um trecho do ciclo (inspira devagar, expira devagar) e apagada no resto */
+@keyframes breath { 0% { opacity: 0; } 9% { opacity: var(--pk); } 20%, 100% { opacity: 0; } }
 @media print { #glyphs { display: none; } }
 
 /* ---------- abertura: brilho atrás das cartas girando e respirando; nome com entrelinha justa ---------- */
@@ -743,18 +744,44 @@ footer .credit b { color: var(--gold); }
 @media (max-width: 900px) { .hp-grid { grid-template-columns: 1fr; } }
 
 /* ---------- decks: ao passar o mouse, a arte do deck aparece ao fundo e as cartas se abrem ---------- */
-.door.themed { position: relative; overflow: hidden; isolation: isolate; transition: border-color .3s, box-shadow .3s; }
-.door.themed::before { content: ""; position: absolute; inset: -40px; z-index: -1; background-image: var(--art), var(--art2); background-size: cover; background-position: center 28%;
+.themed { position: relative; overflow: hidden; isolation: isolate; transition: border-color .3s, box-shadow .3s; }
+.themed::before { content: ""; position: absolute; inset: -40px; z-index: -1; background-image: var(--art), var(--art2); background-size: cover; background-position: center 28%;
   filter: blur(18px) saturate(1.5) brightness(.6); opacity: 0; transform: scale(1.1); transition: opacity .5s ease, transform 5s ease-out; }
-.door.themed::after { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(ellipse at 50% 30%, transparent 20%, rgba(15, 15, 17, .7) 85%); opacity: 0; transition: opacity .5s; }
-.door.themed:hover::before, .door.themed:focus-visible::before { opacity: 1; transform: scale(1.3); }
-.door.themed:hover::after, .door.themed:focus-visible::after { opacity: 1; }
-.door.themed:hover { border-color: var(--gold); box-shadow: 0 20px 50px rgba(0, 0, 0, .6), 0 0 50px var(--gold-glow); }
-.door.themed .fan img { transition: transform .5s cubic-bezier(.2, .8, .2, 1); }
-.door.themed:hover .fan img:nth-child(1) { transform: translate(-30px, 4px) rotate(-24deg); }
-.door.themed:hover .fan img:nth-child(2) { transform: translateY(-12px) scale(1.1); }
-.door.themed:hover .fan img:nth-child(3) { transform: translate(30px, 4px) rotate(24deg); }
-@media print { body::after, .sun::after, .hp-box { animation: none; } .door.themed::before, .door.themed .fan img { transition: none; } }
+.themed::after { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(ellipse at 50% 30%, transparent 20%, rgba(15, 15, 17, .7) 85%); opacity: 0; transition: opacity .5s; }
+.themed:hover::before, .themed:focus-visible::before { opacity: 1; transform: scale(1.3); }
+.themed:hover::after, .themed:focus-visible::after { opacity: 1; }
+.themed:hover { border-color: var(--gold); box-shadow: 0 20px 50px rgba(0, 0, 0, .6), 0 0 50px var(--gold-glow); }
+.themed .fan img { transition: transform .5s cubic-bezier(.2, .8, .2, 1); }
+.themed:hover .fan img:nth-child(1) { transform: translate(-30px, 4px) rotate(-24deg); }
+.themed:hover .fan img:nth-child(2) { transform: translateY(-12px) scale(1.1); }
+.themed:hover .fan img:nth-child(3) { transform: translate(30px, 4px) rotate(24deg); }
+/* no editor os decks são cartões menores: o leque abre menos para não cobrir o nome */
+.deckbadge.themed:hover .fan img:nth-child(1) { transform: translate(-12px, 3px) rotate(-22deg); }
+.deckbadge.themed:hover .fan img:nth-child(3) { transform: translate(12px, 3px) rotate(22deg); }
+.deckbadge.themed:hover b { color: var(--gold); }
+
+/* ---------- calculadora: a mão fica numa mesa de duelo, com as vagas vazias como o verso da carta ---------- */
+.handmat { position: relative; overflow: hidden; isolation: isolate; border-color: rgba(232, 190, 88, .35);
+  background: radial-gradient(ellipse at 50% 100%, rgba(232, 190, 88, .16), transparent 60%), linear-gradient(180deg, #1C1B1F, #121214);
+  box-shadow: inset 0 0 0 6px #141416, inset 0 0 0 7px rgba(232, 190, 88, .22), 0 20px 50px rgba(0, 0, 0, .45); }
+.handmat > .mat { opacity: .3; bottom: -120px; z-index: -1; }
+.handmat > * { position: relative; }
+.handmat > .mat { position: absolute; }
+.slot-empty { position: relative; width: 140px; aspect-ratio: 256/440; border-radius: 12px; overflow: hidden; display: grid; place-content: center; justify-items: center; gap: 6px;
+  color: var(--sand); font-weight: 800; font-size: 13px; border: 2px solid rgba(232, 190, 88, .45);
+  background: radial-gradient(ellipse at 50% 42%, rgba(232, 190, 88, .22), transparent 58%), repeating-linear-gradient(45deg, rgba(232, 190, 88, .05) 0 6px, transparent 6px 12px), linear-gradient(160deg, #2A2724, #17161A);
+  box-shadow: inset 0 0 0 5px #141416, inset 0 0 0 6px rgba(232, 190, 88, .3), 0 10px 24px rgba(0, 0, 0, .5); transition: transform .25s ease, box-shadow .25s ease, border-color .25s; }
+/* o Olho do Milênio no centro, como no verso da carta, respirando devagar */
+.slot-empty .se-eye { position: absolute; left: 50%; top: 27%; width: 70px; height: 40px; transform: translate(-50%, -50%); opacity: .28; animation: eyebreath 4s ease-in-out infinite;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 32'%3E%3Cpath d='M4 16 Q28 -2 52 16 Q28 34 4 16 Z' fill='none' stroke='%23F1C24A' stroke-width='3'/%3E%3Ccircle cx='28' cy='16' r='6' fill='%23F1C24A'/%3E%3C/svg%3E") center / contain no-repeat; }
+.slot-empty:nth-child(2n) .se-eye { animation-delay: -1.3s; } .slot-empty:nth-child(3n) .se-eye { animation-delay: -2.6s; }
+@keyframes eyebreath { 0%, 100% { opacity: .18; } 50% { opacity: .42; } }
+.slot-empty .se-plus { position: relative; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 30px; line-height: 1; font-weight: 900; color: var(--gold-ink);
+  background: linear-gradient(160deg, #FFE08A, var(--gold) 45%, var(--gold2)); box-shadow: 0 0 0 4px var(--gold-glow); margin-top: 46px; }
+.slot-empty:hover { transform: translateY(-6px); border-color: var(--gold); box-shadow: inset 0 0 0 5px #141416, inset 0 0 0 6px var(--gold), 0 18px 34px rgba(0, 0, 0, .55), 0 0 28px var(--gold-glow); }
+.handmat .tile { box-shadow: 0 12px 26px rgba(0, 0, 0, .55), 0 0 0 1px rgba(232, 190, 88, .35); }
+@media print { .slot-empty .se-eye { animation: none; } }
+@media print { body::after, .sun::after, .hp-box { animation: none; } .themed::before, .themed .fan img { transition: none; } }
 
 /* ---------- olho dos dois lados do título ---------- */
 .head h2::after { content: ""; display: inline-block; width: 28px; height: 16px; margin-left: 10px; vertical-align: 2px;
@@ -2868,7 +2895,7 @@ document.addEventListener('click', e => {
 const page = inner => `<div class="wrap pad stack">${inner}${footer()}</div>`;
 const footer = () => `<footer>
   <span>Fusões, cartas, regras de deck, duelistas, drops e boosters: dados públicos do <a href="https://forbiddenlegacy.com.br/" target="_blank" rel="noopener">site oficial do Forbidden Legacy</a> (${fmt(FUS.length)} fusões do motor do jogo). Equipamentos: tabela do Forbidden Memories original. Cartas oficiais em alta e nomes em português: <a href="https://ygoprodeck.com/" target="_blank" rel="noopener">YGOPRODeck</a>.</span>
-  <span class="credit">Códex Proibido, criado por <b>Henrique Felippe Pereira</b>, o <b>Takeushi</b>.</span>
+  <span class="credit">Códex Proibido, criado por <b>Takeushi</b> (Henrique Felippe Pereira).</span>
   <span>Guia de fã, para uso pessoal. Se algo não bater com o jogo, vale o jogo. Jogo: <a href="https://forbiddenlegacy.com.br/" target="_blank" rel="noopener">site e download</a> · <a href="https://discord.gg/forbidden-legacy" target="_blank" rel="noopener">Discord</a> · <a href="https://www.youtube.com/@tragergames" target="_blank" rel="noopener">YouTube</a>.</span></footer>`;
 
 /* ===================== início ===================== */
@@ -3229,7 +3256,7 @@ function viewMao() {
   const labels = ['Carta 1', 'Carta 2', 'Carta 3', 'Carta 4', 'Carta 5', 'Monstro em campo'];
   const slots = hand.map((id, i) => `<div class="sec" style="gap:6px;justify-items:start"><span class="note" style="font-weight:900;font-size:13px">${labels[i]}</span>${id
     ? `<div style="position:relative">${tile(id, 'm', '', `data-slot="${i}"`)}<button class="x" type="button" data-remove="${i}" aria-label="Tirar carta" style="position:absolute;top:-9px;right:-9px;width:30px;height:30px;border-radius:50%;border:0;cursor: var(--hand);background:var(--atk);color:var(--night);font-weight:900">×</button></div>`
-    : `<button type="button" data-slot="${i}" style="width:140px;aspect-ratio:256/440;border:2px dashed var(--line);border-radius:12px;background:var(--night2);display:grid;place-content:center;justify-items:center;gap:6px;cursor: var(--hand);color:var(--muted);font-weight:800;font-size:13px"><span style="font-size:40px;line-height:1;font-weight:900">+</span>Escolher<br>carta</button>`}</div>`).join('');
+    : `<button type="button" class="slot-empty" data-slot="${i}"><span class="se-eye" aria-hidden="true"></span><span class="se-plus">+</span>Escolher<br>carta</button>`}</div>`).join('');
   const pool = hand.filter(Boolean); let res = '';
   const mons = pool.filter(id => isMon(card(id))).length;
   if (pool.length < 2) res = `<div class="empty">${ICON.cards}<b>Coloque pelo menos duas cartas</b><span>Cole um print do duelo aqui em cima ou escolha as cartas nos espaços.</span></div>`;
@@ -3250,7 +3277,7 @@ function viewMao() {
   ${scanPanel()}
   ${printExample(false)}
   <section class="sec"><div class="head"><h2>Sua mão</h2><p class="sub">As cartas lidas do print aparecem aqui. Você também pode escolher ou trocar qualquer carta clicando no espaço.</p></div>
-    <div class="panel sec"><div class="row center" style="align-items:flex-start;gap:14px">${slots}</div>
+    <div class="panel sec handmat">${MAT_SVG}<div class="row center" style="align-items:flex-start;gap:14px">${slots}</div>
     <div class="row center"><button class="btn" type="button" id="clr">${ICON.trash}Limpar mão</button></div></div></section>
   <section class="sec">${res}</section>`);
   view.querySelectorAll('[data-slot]').forEach(b => b.addEventListener('click', ev => { ev.stopPropagation(); const i = +b.dataset.slot; openPicker(labels[i], id => { hand[i] = id; saveHand(); viewMao(); }); }));
@@ -3507,7 +3534,8 @@ function viewEditorHome() {
   <section class="sec"><div class="head"><h2>Trazer um deck do jogo</h2><p class="sub">No jogo, abra o Editor de Deck e gere o código. Cole aqui para abrir o mesmo deck no Códex.</p></div>
     <div class="codebox"><input id="codeout" placeholder="Cole aqui um código FL1-" aria-label="Código do deck"><button class="btn gold" type="button" id="imp">Abrir este deck</button></div></section>
   <section class="sec"><div class="head"><h2>Partir de um deck pronto</h2><p class="sub">Abre uma cópia do deck pronto para você ajustar e salvar com o seu nome.</p></div>
-    <div class="deckbadges">${THEMES.map(t => `<button type="button" class="deckbadge" data-theme="${t.key}">${deckFan(themeData(t).deck)}<span><b>${esc(t.title)}</b><small>40 cartas</small></span></button>`).join('')}</div></section>`);
+    <div class="deckbadges">${THEMES.map(t => { const dk = themeData(t).deck, ace = card([...new Set(dk)].filter(id => isMon(card(id))).sort(byStrength)[0] || 1);
+      return `<button type="button" class="deckbadge themed" data-theme="${t.key}" style="--art:url('${hdImg(ace)}');--art2:url('${gameImg(ace)}')">${deckFan(dk)}<span><b>${esc(t.title)}</b><small>40 cartas</small></span></button>`; }).join('')}</div></section>`);
   document.getElementById('nd').onclick = () => edOpen([], 'Novo deck', -1);
   view.querySelectorAll('[data-game]').forEach(b => b.onclick = () => { const d = GAME.decks[+b.dataset.game]; edOpen(d.ids.slice(), GAME.jogador ? `Deck de ${GAME.jogador}` : 'Deck do jogo', -1); });
   view.querySelectorAll('[data-open]').forEach(b => b.onclick = () => { const i = +b.dataset.open; edOpen(ed.saved[i].deck, ed.saved[i].name, i); });
@@ -3614,18 +3642,23 @@ const GLYPH_SHAPES = [
   [52, 88, 48, 45, `<path d='M60 104 Q76 90 92 104 Q76 118 60 104 Z'/><circle cx='76' cy='104' r='4.5'/><path d='M76 112 V124 M70 120 L76 126'/>`],
   [6, 103, 30, 30, `<path d='M14 118 l7 -7 l7 7 l-7 7 z'/>`]
 ].map(([x, y, w, h, d]) => {
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='${x} ${y} ${w} ${h}'><defs><filter id='b' x='-50%' y='-50%' width='200%' height='200%'><feGaussianBlur stdDeviation='2.4'/></filter></defs><g fill='none' stroke='%23FFD978' stroke-linejoin='round' stroke-linecap='round'><g filter='url(%23b)' stroke-width='4.5' stroke-opacity='.85'>${d}</g><g stroke-width='1.8'>${d}</g></g></svg>`;
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='${x} ${y} ${w} ${h}'><defs><filter id='b' x='-50%' y='-50%' width='200%' height='200%'><feGaussianBlur stdDeviation='2.4'/></filter></defs><g fill='none' stroke='%23FFD978' stroke-linejoin='round' stroke-linecap='round'><g filter='url(%23b)' stroke-width='4' stroke-opacity='.5'>${d}</g><g stroke-width='1.6'>${d}</g></g></svg>`;
   return { x, y, w, h, url: `url("data:image/svg+xml,${svg.replace(/</g, '%3C').replace(/>/g, '%3E')}")` };
 });
 document.head.insertAdjacentHTML('beforeend', `<style>${GLYPH_SHAPES.map((g, k) => `.gl.g${k}{width:${g.w}px;height:${g.h}px;background-image:${g.url}}`).join('')}</style>`);
 function buildGlyphs() {
   const box = document.getElementById('glyphs'); if (!box) return;
-  const cols = Math.ceil(innerWidth / 140), rows = Math.ceil(innerHeight / 140); let h = '';
+  const W = innerWidth, H = innerHeight, cols = Math.ceil(W / 140), rows = Math.ceil(H / 140); let h = '';
+  // a luz acende uma região por vez (canto de cima à direita, centro, embaixo à esquerda...) e o resto fica apagado;
+  // cada símbolo pertence à região mais próxima e brilha menos quanto mais longe do centro dela
+  const zones = [[.8, .22], [.48, .55], [.18, .8], [.2, .25], [.78, .78], [.5, .15]].map(([x, y]) => [x * W, y * H]);
+  const D = 24, slot = D / zones.length;
   for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) GLYPH_SHAPES.forEach((g, k) => {
-    // a fase vem de uma onda suave pela tela (vizinhos respiram quase juntos) mais um pouco de acaso
-    const wave = Math.sin(c * .75 + r * .35 + k) * 2.2 + Math.cos(r * .9 - c * .45) * 2.2 + 4.4;
-    const dur = (7 + Math.random() * 3).toFixed(1), delay = -(wave + Math.random() * 1.6).toFixed(1), peak = (.3 + Math.random() * .5).toFixed(2);
-    h += `<i class="gl g${k}" style="left:${c * 140 + g.x}px;top:${r * 140 + g.y}px;--d:${dur}s;--dl:${delay}s;--pk:${peak}"></i>`;
+    const x = c * 140 + g.x + g.w / 2, y = r * 140 + g.y + g.h / 2;
+    let zi = 0, best = Infinity; zones.forEach(([zx, zy], i) => { const d = Math.hypot(x - zx, y - zy); if (d < best) { best = d; zi = i; } });
+    const peak = .3 * Math.exp(-best / 230); if (peak < .025) return;
+    const delay = -(D - zi * slot - best / 400 - Math.random() * .6).toFixed(2);
+    h += `<i class="gl g${k}" style="left:${c * 140 + g.x}px;top:${r * 140 + g.y}px;--d:${D}s;--dl:${delay}s;--pk:${peak.toFixed(3)}"></i>`;
   });
   box.innerHTML = h;
 }
