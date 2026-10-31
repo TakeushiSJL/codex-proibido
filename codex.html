@@ -202,7 +202,13 @@ h3 { margin: 0; font-size: 18px; font-weight: 900; }
 
 /* ---------- equação ---------- */
 .eq { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 12px; }
-.pair { display: inline-flex; align-items: center; gap: 12px; }
+/* o par "sinal + carta" nunca encolhe: se não couber, desce de linha inteiro (encolher fazia as cartas se sobreporem) */
+.pair { display: inline-flex; align-items: center; gap: 12px; flex: none; }
+/* jogadas em cadeia (3 cartas ou mais) ocupam a largura toda da lista em 2 colunas; as de 2 cartas continuam em pares */
+.list.two { grid-auto-flow: row dense; }
+.list.two > .panel.wide { grid-column: 1 / -1; }
+.list.two > .panel.solo { grid-column: 1 / -1; justify-self: center; width: min(100%, 640px); }
+.list.two > .panel.wide .eq { flex-wrap: wrap; justify-content: center; }
 .op { width: 50px; height: 50px; border-radius: 50%; flex: none; display: grid; place-items: center; font: 900 34px/1 var(--f-body); }
 .op-plus { background: radial-gradient(circle at 35% 30%, #FFE08A, var(--gold) 45%, var(--gold2)); color: var(--gold-ink); box-shadow: 0 0 0 6px var(--gold-glow); }
 .op-eq { background: radial-gradient(circle at 35% 30%, #FFFFFF, var(--faience) 50%, #8C8475); color: var(--faience-ink); box-shadow: 0 0 0 6px var(--faience-glow); }
@@ -3265,6 +3271,13 @@ const EXAMPLE = (() => {
     const c = computeChains(h); if (!c.length) continue; const s = card(c[0].result).atk + (c[0].steps.length > 1 ? 1000 : 0); if (s > bestS) { bestS = s; best = h; } }
   return best;
 })();
+// outras fusões: primeiro as de 2 cartas, em pares; depois as cadeias, na largura toda.
+// Se sobrar uma de 2 cartas sozinha na última fileira, ela fica centralizada (sem espaço vazio de um lado só)
+function otherPlays(rest, playHTML) {
+  const pares = rest.filter(ch => ch.steps.length === 1), cadeias = rest.filter(ch => ch.steps.length > 1);
+  return pares.map((ch, i) => `<div class="panel${pares.length % 2 && i === pares.length - 1 ? ' solo' : ''}">${playHTML(ch, 'm')}</div>`).join('')
+    + cadeias.map(ch => `<div class="panel wide">${playHTML(ch, 'm')}</div>`).join('');
+}
 function viewMao() {
   const labels = ['Carta 1', 'Carta 2', 'Carta 3', 'Carta 4', 'Carta 5', 'Monstro em campo'];
   const slots = hand.map((id, i) => `<div class="sec" style="gap:6px;justify-items:start"><span class="note" style="font-weight:900;font-size:13px">${labels[i]}</span>${id
@@ -3282,7 +3295,7 @@ function viewMao() {
         return `<div class="play" style="display:grid;gap:12px">${equation(ch.start, ch.steps, size)}<div class="row" style="color:var(--muted);font-size:14px">${gain > 0 ? `<span class="pill good">+${gain} de ATK</span>` : `<span class="pill flat">não ganha ATK</span>`}${ch.steps.length > 1 ? `<span class="pill gold">cadeia de ${ch.steps.length + 1} cartas</span>` : ''}<span>Jogue nesta ordem: <b style="color:var(--sand)">${order}</b></span></div></div>`; };
       const [first, ...rest] = chains;
       res = `<div class="tablet sec"><div class="head"><h2>Melhor jogada</h2></div>${playHTML(first, 'm')}</div>
-        ${rest.length ? `<div class="sec"><div class="head"><h2>Outras fusões possíveis<span class="count">${rest.length}</span></h2></div><div class="list two">${rest.map(ch => `<div class="panel">${playHTML(ch, 'm')}</div>`).join('')}</div></div>` : ''}`;
+        ${rest.length ? `<div class="sec"><div class="head"><h2>Outras fusões possíveis<span class="count">${rest.length}</span></h2></div><div class="list two">${otherPlays(rest, playHTML)}</div></div>` : ''}`;
     }
   }
   view.innerHTML = `<section class="fusehero">${MAT_SVG}${fusePair()}<h1>Calculadora de Fusão</h1>
