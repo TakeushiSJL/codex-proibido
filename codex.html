@@ -835,6 +835,15 @@ footer .credit b { color: var(--gold); }
 .home-hero { padding-block: 34px 40px; }
 .home-hero + .wrap.stack, .home-hero + .stack { padding-top: 0; }
 .handfan { padding-top: 28px; }
+/* janela de novidades (depois de atualizar) e de reportar problema */
+dialog.news .pk { justify-items: center; text-align: center; }
+.news-star { font-size: 34px; color: var(--gold); text-shadow: 0 0 18px var(--gold-glow); line-height: 1; }
+dialog.news h3 { font-family: var(--f-display); font-size: 24px; color: var(--gold); }
+#nv-lista { text-align: left; margin: 4px 0; padding-left: 20px; display: grid; gap: 8px; color: var(--sand); }
+#nv-lista li::marker { color: var(--gold); }
+#rp-texto { width: 100%; resize: vertical; background: var(--night2); color: var(--sand); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font: 600 15px var(--f-body); }
+#rp-texto:focus { outline: 2px solid var(--gold); }
+footer .btn.report { font-size: 14px; padding: 8px 18px; }
 /* ---------- olho dos dois lados do título ---------- */
 .head h2::after { content: ""; display: inline-block; width: 28px; height: 16px; margin-left: 10px; vertical-align: 2px;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 32'%3E%3Cpath d='M4 16 Q28 -2 52 16 Q28 34 4 16 Z' fill='none' stroke='%23F1C24A' stroke-width='3'/%3E%3Ccircle cx='28' cy='16' r='6' fill='%23F1C24A'/%3E%3C/svg%3E") center / contain no-repeat; }
@@ -945,6 +954,21 @@ footer > span { max-width: 92ch; }
     <div class="typebar" id="pk-types"></div>
     <div class="pk-grid" id="pk-grid"></div>
   </div>
+</dialog>
+
+<dialog id="novidades" class="small news" aria-label="Novidades do Códex">
+  <div class="pk"><span class="news-star" aria-hidden="true">✦</span><h3>O Códex foi atualizado!</h3><p class="note" id="nv-data" style="margin:0"></p>
+    <ul id="nv-lista"></ul>
+    <div class="row center"><button class="btn gold" type="button" id="nv-ok">Legal, valeu!</button></div></div>
+</dialog>
+
+<dialog id="reportar" class="small" aria-label="Reportar um problema">
+  <div class="pk"><h3>Reportar um problema</h3>
+    <p class="note" style="margin:0">Conte o que aconteceu: o que você fez, o que esperava e o que apareceu. O Códex junta a versão e a página onde você está.</p>
+    <textarea id="rp-texto" rows="5" placeholder="Ex.: colei o print e a carta 3 saiu errada: era Baby Dragon e apareceu outra."></textarea>
+    <p class="note" id="rp-info" style="margin:0;font-size:12.5px"></p>
+    <div class="row center"><button class="btn" type="button" id="rp-fechar">Cancelar</button><button class="btn gold" type="button" id="rp-enviar"></button></div>
+    <p class="note" id="rp-ok" style="margin:0;text-align:center" hidden></p></div>
 </dialog>
 
 <dialog id="leave" class="small" aria-label="Mudanças não salvas">
@@ -2666,6 +2690,10 @@ function toast(msg, err) {
   const t = document.getElementById('toast'); t.textContent = msg; t.classList.toggle('err', !!err); t.hidden = false;
   clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2600);
 }
+// versão desta montagem (a mesma do versao.txt que o programa instalado usa para se atualizar)
+const VERSAO = '2026.10.31-2219';
+// link de convite do servidor do Discord do Códex (vazio = o botão de reportar só copia o texto)
+const DISCORD_CONVITE = '';
 const store = {
   get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
@@ -2951,7 +2979,9 @@ document.addEventListener('click', e => {
 const page = inner => `<div class="wrap pad stack">${inner}${footer()}</div>`;
 const footer = () => `<footer>
   <span>Fusões, cartas, regras de deck, duelistas, drops e boosters: dados públicos do <a href="https://forbiddenlegacy.com.br/" target="_blank" rel="noopener">site oficial do Forbidden Legacy</a> (${fmt(FUS.length)} fusões do motor do jogo). Equipamentos: tabela do Forbidden Memories original. Cartas oficiais em alta e nomes em português: <a href="https://ygoprodeck.com/" target="_blank" rel="noopener">YGOPRODeck</a>.</span>
+  <button class="btn report" type="button" data-reportar>🐞 Achou um problema? Reportar</button>
   <span class="credit">Códex Proibido, criado por <b>Takeushi</b> (Henrique Felippe Pereira).</span>
+  <span>Versão ${VERSAO.startsWith('%%') ? 'de teste' : VERSAO.slice(0, 10).split('.').reverse().join('/')}</span>
   <span>Guia de fã, para uso pessoal. Se algo não bater com o jogo, vale o jogo. Jogo: <a href="https://forbiddenlegacy.com.br/" target="_blank" rel="noopener">site e download</a> · <a href="https://discord.gg/forbidden-legacy" target="_blank" rel="noopener">Discord</a> · <a href="https://www.youtube.com/@tragergames" target="_blank" rel="noopener">YouTube</a>.</span></footer>`;
 
 /* ===================== início ===================== */
@@ -3847,8 +3877,48 @@ addEventListener('pointermove', e => {
   });
 }, { passive: true });
 document.documentElement.addEventListener('mouseleave', () => glyphs.classList.remove('on'));
+
+/* novidades: depois que o Códex se atualiza sozinho, mostra uma vez o que mudou (a versão vem carimbada na montagem).
+   Para cada versão publicada, acrescente uma entrada no começo da lista. */
+const NOVIDADES = [
+  { data: '31/10/2026', itens: [
+    'A Calculadora de Fusão reconhece as cartas Full Art pelo desenho (Dark Magician, Baby Dragon, Blackland e outras).',
+    'Combo com equipamento e carta de campo na melhor jogada, com o ATK final em destaque.',
+    'As dicas de equipamento só aparecem quando funcionam de verdade no monstro.',
+    'Botão Full Art na ficha de cada carta e vitrine de Full Art nos boosters.',
+    'Botão para reportar problemas, aqui embaixo, no fim de cada página.'] }
+];
+function mostrarNovidades() {
+  if (VERSAO.startsWith('%%')) return;
+  const vista = store.get('fl-versao-vista', null); store.set('fl-versao-vista', VERSAO);
+  if (!vista || vista === VERSAO) return;   // primeira vez que abre: só guarda a versão, sem janela
+  const n = NOVIDADES[0], d = document.getElementById('novidades');
+  document.getElementById('nv-data').textContent = `Versão de ${n.data}. O que mudou:`;
+  document.getElementById('nv-lista').innerHTML = n.itens.map(i => `<li>${esc(i)}</li>`).join('');
+  document.getElementById('nv-ok').onclick = () => d.close();
+  d.showModal();
+}
+
+/* reportar problema: a pessoa escreve, o Códex junta versão e página, copia o texto e abre o servidor do Discord */
+function abrirReportar() {
+  const d = document.getElementById('reportar'), tx = document.getElementById('rp-texto'), ok = document.getElementById('rp-ok'), env = document.getElementById('rp-enviar');
+  const info = `Versão ${VERSAO} · página ${location.hash || '#inicio'} · tela ${innerWidth}×${innerHeight}`;
+  document.getElementById('rp-info').textContent = info; ok.hidden = true; tx.value = '';
+  env.textContent = DISCORD_CONVITE ? 'Copiar e abrir o Discord' : 'Copiar o relato';
+  env.onclick = () => {
+    if (!tx.value.trim()) { tx.focus(); return; }
+    const texto = `🐞 Problema no Códex Proibido\n${tx.value.trim()}\n(${info})`;
+    const feito = () => { ok.hidden = false; ok.textContent = DISCORD_CONVITE ? 'Texto copiado! No Discord, entre no canal de bugs e cole com Ctrl+V.' : 'Texto copiado! Mande para o Takeushi.'; if (DISCORD_CONVITE) window.open(DISCORD_CONVITE, '_blank', 'noopener'); };
+    try { navigator.clipboard.writeText(texto).then(feito, () => { tx.value = texto; tx.select(); feito(); }); } catch (e) { tx.value = texto; tx.select(); feito(); }
+  };
+  document.getElementById('rp-fechar').onclick = () => d.close();
+  d.showModal(); tx.focus();
+}
+document.addEventListener('click', e => { if (e.target.closest('[data-reportar]')) abrirReportar(); });
+
 buildNav();
 route();
+mostrarNovidades();
 </script>
 
 </body></html>
