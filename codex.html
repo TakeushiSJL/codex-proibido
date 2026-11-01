@@ -964,7 +964,7 @@ footer > span { max-width: 92ch; }
 
 <dialog id="reportar" class="small" aria-label="Reportar um problema">
   <div class="pk"><h3>Reportar um problema</h3>
-    <p class="note" style="margin:0">Conte o que aconteceu: o que você fez, o que esperava e o que apareceu. O Códex junta a versão e a página onde você está.</p>
+    <p class="note" style="margin:0">Conte o que aconteceu: o que você fez, o que esperava e o que apareceu. O Códex junta a versão e a página onde você está e abre um e-mail pronto para o criador do guia.</p>
     <textarea id="rp-texto" rows="5" placeholder="Ex.: colei o print e a carta 3 saiu errada: era Baby Dragon e apareceu outra."></textarea>
     <p class="note" id="rp-info" style="margin:0;font-size:12.5px"></p>
     <div class="row center"><button class="btn" type="button" id="rp-fechar">Cancelar</button><button class="btn gold" type="button" id="rp-enviar"></button></div>
@@ -2691,9 +2691,9 @@ function toast(msg, err) {
   clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2600);
 }
 // versão desta montagem (a mesma do versao.txt que o programa instalado usa para se atualizar)
-const VERSAO = '2026.11.01-0200';
-// link de convite do servidor do Discord do Códex (vazio = o botão de reportar só copia o texto)
-const DISCORD_CONVITE = '';
+const VERSAO = '2026.11.01-0647';
+// e-mail que recebe os relatos de problema (por enquanto; depois pode virar um servidor do Discord)
+const REPORTE_EMAIL = 'henri.pereira99@gmail.com';
 const store = {
   get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
@@ -3884,6 +3884,8 @@ document.documentElement.addEventListener('mouseleave', () => glyphs.classList.r
    Para cada versão publicada, acrescente uma entrada no começo da lista. */
 const NOVIDADES = [
   { data: '01/11/2026', itens: [
+    'O botão "Reportar problema", no fim de cada página, agora abre um e-mail pronto para o criador do Códex: é só escrever o que aconteceu e enviar.'] },
+  { data: '01/11/2026', itens: [
     'Novo instalador completo: todas as imagens já vêm dentro dele, então a instalação funciona mesmo sem internet.',
     'Reinstalar ficou mais rápido: as imagens que já estão no seu computador não são baixadas de novo.',
     'Se o arquivo do guia sumir da pasta, o Códex avisa o que fazer em vez de abrir uma janela em branco.'] },
@@ -3906,16 +3908,20 @@ function mostrarNovidades() {
   d.showModal();
 }
 
-/* reportar problema: a pessoa escreve, o Códex junta versão e página, copia o texto e abre o servidor do Discord */
+/* reportar problema: a pessoa escreve, o Códex junta versão e página, copia o texto e abre o Gmail com o e-mail pronto */
 function abrirReportar() {
   const d = document.getElementById('reportar'), tx = document.getElementById('rp-texto'), ok = document.getElementById('rp-ok'), env = document.getElementById('rp-enviar');
   const info = `Versão ${VERSAO} · página ${location.hash || '#inicio'} · tela ${innerWidth}×${innerHeight}`;
   document.getElementById('rp-info').textContent = info; ok.hidden = true; tx.value = '';
-  env.textContent = DISCORD_CONVITE ? 'Copiar e abrir o Discord' : 'Copiar o relato';
+  env.textContent = 'Enviar por e-mail';
   env.onclick = () => {
     if (!tx.value.trim()) { tx.focus(); return; }
-    const texto = `🐞 Problema no Códex Proibido\n${tx.value.trim()}\n(${info})`;
-    const feito = () => { ok.hidden = false; ok.textContent = DISCORD_CONVITE ? 'Texto copiado! No Discord, entre no canal de bugs e cole com Ctrl+V.' : 'Texto copiado! Mande para o Takeushi.'; if (DISCORD_CONVITE) window.open(DISCORD_CONVITE, '_blank', 'noopener'); };
+    const assunto = 'Problema no Códex Proibido', texto = `${tx.value.trim()}\n\n(${info})`;
+    const feito = () => {
+      ok.hidden = false;
+      ok.innerHTML = `Abrimos o Gmail com o e-mail pronto: é só clicar em Enviar.<br>Usa outro e-mail? O texto já está copiado: cole numa mensagem para <a href="mailto:${REPORTE_EMAIL}?subject=${encodeURIComponent(assunto)}">${REPORTE_EMAIL}</a>.`;
+      window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${REPORTE_EMAIL}&su=${encodeURIComponent(assunto)}&body=${encodeURIComponent(texto)}`, '_blank', 'noopener');
+    };
     try { navigator.clipboard.writeText(texto).then(feito, () => { tx.value = texto; tx.select(); feito(); }); } catch (e) { tx.value = texto; tx.select(); feito(); }
   };
   document.getElementById('rp-fechar').onclick = () => d.close();
