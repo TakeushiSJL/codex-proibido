@@ -2691,7 +2691,7 @@ function toast(msg, err) {
   clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2600);
 }
 // versão desta montagem (a mesma do versao.txt que o programa instalado usa para se atualizar)
-const VERSAO = '2026.10.31-2246';
+const VERSAO = '2026.11.01-0200';
 // link de convite do servidor do Discord do Códex (vazio = o botão de reportar só copia o texto)
 const DISCORD_CONVITE = '';
 const store = {
@@ -3883,6 +3883,10 @@ document.documentElement.addEventListener('mouseleave', () => glyphs.classList.r
 /* novidades: depois que o Códex se atualiza sozinho, mostra uma vez o que mudou (a versão vem carimbada na montagem).
    Para cada versão publicada, acrescente uma entrada no começo da lista. */
 const NOVIDADES = [
+  { data: '01/11/2026', itens: [
+    'Novo instalador completo: todas as imagens já vêm dentro dele, então a instalação funciona mesmo sem internet.',
+    'Reinstalar ficou mais rápido: as imagens que já estão no seu computador não são baixadas de novo.',
+    'Se o arquivo do guia sumir da pasta, o Códex avisa o que fazer em vez de abrir uma janela em branco.'] },
   { data: '31/10/2026', itens: [
     'A Calculadora de Fusão reconhece as cartas Full Art pelo desenho (Dark Magician, Baby Dragon, Blackland e outras).',
     'Combo com equipamento e carta de campo na melhor jogada, com o ATK final em destaque.',
@@ -3919,6 +3923,8 @@ function abrirReportar() {
 }
 document.addEventListener('click', e => { if (e.target.closest('[data-reportar]')) abrirReportar(); });
 
+// link que abre a calculadora já com cartas na mão (?mao=35,4,…): para mostrar uma jogada a um amigo
+{ const m = new URLSearchParams(location.search).get('mao'); if (m) m.split(',').map(Number).filter(id => byId.has(id)).slice(0, 6).forEach((id, i) => { hand[i] = id; }); }
 buildNav();
 route();
 mostrarNovidades();
