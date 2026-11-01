@@ -207,6 +207,9 @@ h3 { margin: 0; font-size: 18px; font-weight: 900; }
 /* jogadas em cadeia (3 cartas ou mais) ocupam a largura toda da lista em 2 colunas; as de 2 cartas continuam em pares */
 .list.two { grid-auto-flow: row dense; }
 .list.two > .panel.wide { grid-column: 1 / -1; }
+/* combo com equipamento: faixa dourada logo abaixo da fusão */
+.combo { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; padding: 10px 14px; border-radius: 14px; border: 1px dashed var(--gold2); background: rgba(232, 190, 88, .08); font-size: 14.5px; }
+.combo > span:last-child { max-width: 46ch; text-align: left; }
 .list.two > .panel.solo { grid-column: 1 / -1; justify-self: center; width: min(100%, 640px); }
 .list.two > .panel.wide .eq { flex-wrap: wrap; justify-content: center; }
 .op { width: 50px; height: 50px; border-radius: 50%; flex: none; display: grid; place-items: center; font: 900 34px/1 var(--f-body); }
@@ -3118,26 +3121,42 @@ async function ocr() {
   return ocrWorker;
 }
 const nrm = s => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+// letras que o leitor costuma trocar nos nomes em versalete do jogo: trocar uma pela outra custa pouco
+const OCR_PAR = new Set(['il', 'li', 'i1', '1i', 'l1', '1l', 'o0', '0o', 'gc', 'cg', 'nr', 'rn', 'du', 'ud', 'ij', 'ji', 'ce', 'ec', 'oc', 'co', 's5', '5s', 'b8', '8b', 'ao', 'oa', 'td', 'dt', 'ft', 'tf', 'hn', 'nh', 'mn', 'nm', 'vy', 'yv', 'pr', 'rp', 'ea', 'ae']);
 function lev(a, b) {
   if (!a.length) return b.length; if (!b.length) return a.length;
   let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
-  for (let i = 1; i <= a.length; i++) { const cur = [i]; for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; }
+  for (let i = 1; i <= a.length; i++) { const cur = [i]; for (let j = 1; j <= b.length; j++) { const x = a[i - 1], y = b[j - 1]; cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (x === y ? 0 : OCR_PAR.has(x + y) ? 0.4 : 1)); } prev = cur; }
   return prev[b.length];
 }
 const NAME_IDX = ALL.filter(c => c.flid).map(c => [c.id, nrm(c.name)]);
-// a leitura sempre erra uma letra ou outra: fica com o nome de carta mais parecido (também se o nome vier cortado)
+// a leitura sempre erra uma letra ou outra: fica com o nome de carta mais parecido. Também acha o nome
+// quando ele vem cortado (começo do nome) ou no meio de lixo lido junto (cartas de arte especial)
 function matchName(txt) {
   const t = nrm(txt); if (t.length < 3) return null;
-  let best = null, bs = 0;
+  let best = null, bs = 0, second = 0;
   for (const [id, n] of NAME_IDX) {
-    const full = 1 - lev(t, n) / Math.max(t.length, n.length);
-    const part = n.length > t.length + 2 ? (1 - lev(t, n.slice(0, t.length)) / t.length) * 0.92 : 0;
-    const s = Math.max(full, part); if (s > bs) { bs = s; best = id; }
+    let s = 1 - lev(t, n) / Math.max(t.length, n.length);
+    // nome cortado: só com 5 letras ou mais lidas (com 3 letras, "TON" virava "Tongyo")
+    if (t.length >= 5 && n.length > t.length + 2) s = Math.max(s, (1 - lev(t, n.slice(0, t.length)) / t.length) * 0.92);
+    // nome no meio de lixo: vale menos quanto menor o pedaço da leitura que ele explica
+    // (assim "DRAGON" sozinho no fim da leitura não vira "Rabidragon")
+    if (n.length >= 6 && t.length > n.length) for (let L = n.length - 2; L <= n.length + 2; L++) for (let i = 0; i + L <= t.length; i++) { const w = (1 - lev(t.slice(i, i + L), n) / n.length) * (0.72 + 0.26 * Math.min(1, L / t.length)); if (w > s) s = w; }
+    if (s > bs) { second = bs; bs = s; best = id; } else if (s > second) second = s;
   }
-  return bs >= 0.6 ? { id: best, score: bs } : null;
+  return bs >= 0.6 ? { id: best, score: bs, gap: bs - second } : null;
 }
 // quatro tratamentos do recorte: normal, letra escura, letra dourada (cartas Full Art) e letra clara
 function cropName(img, geo, x0, i, mode) {
+  // cinza com contraste e margem branca: o que melhor lê nomes dourados por cima de arte especial (Full Art).
+  // "grayB" pega o nome um pouco mais abaixo, onde algumas cartas especiais o desenham
+  if (mode === 'gray' || mode === 'grayB') {
+    const dy = mode === 'grayB' ? 0.004 : 0, S = mode === 'grayB' ? 4 : 3, P = 12;
+    const x = geo.ox + geo.cw * (x0 + i * HAND_BOX.step), y = geo.oy + geo.ch * (HAND_BOX.y + dy), w = geo.cw * HAND_BOX.w, h = geo.ch * HAND_BOX.h;
+    const c = document.createElement('canvas'); c.width = Math.round(w * S) + 2 * P; c.height = Math.round(h * S) + 2 * P;
+    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.imageSmoothingQuality = 'high';
+    g.filter = 'grayscale(1) contrast(1.8)'; g.drawImage(img, x, y, w, h, P, P, c.width - 2 * P, c.height - 2 * P); return c;
+  }
   const x = geo.ox + geo.cw * (x0 + i * HAND_BOX.step), y = geo.oy + geo.ch * HAND_BOX.y, w = geo.cw * HAND_BOX.w, h = geo.ch * HAND_BOX.h, S = 4;
   const c = document.createElement('canvas'); c.width = Math.round(w * S); c.height = Math.round(h * S);
   const g = c.getContext('2d'); g.drawImage(img, x, y, w, h, 0, 0, c.width, c.height);
@@ -3153,9 +3172,11 @@ function cropName(img, geo, x0, i, mode) {
   g.putImageData(d, 0, 0); return c;
 }
 async function scanPrint(file) {
-  const url = URL.createObjectURL(file); const img = new Image(); img.src = url;
-  try { await img.decode(); } catch (e) { URL.revokeObjectURL(url); throw new Error('Esse arquivo não é uma imagem que eu consiga abrir.'); }
-  const W = img.naturalWidth, H = img.naturalHeight, cw = Math.min(W, H * 16 / 9), ch = cw * 9 / 16;
+  // abre o print direto como bitmap (mais rápido e não depende da página estar sendo desenhada)
+  const url = URL.createObjectURL(file); let img;
+  try { img = await createImageBitmap(file); }
+  catch (e) { try { img = new Image(); img.src = url; await img.decode(); } catch (e2) { URL.revokeObjectURL(url); throw new Error('Esse arquivo não é uma imagem que eu consiga abrir.'); } }
+  const W = img.naturalWidth || img.width, H = img.naturalHeight || img.height, cw = Math.min(W, H * 16 / 9), ch = cw * 9 / 16;
   const geo = { cw, ch, ox: (W - cw) / 2, oy: (H - ch) / 2 };
   const w = await ocr();
   const readSlot = async (x0, i, modes) => {
@@ -3167,7 +3188,8 @@ async function scanPrint(file) {
     }
     return { best, read };
   };
-  const good = s => s.best && s.best.score >= 0.72;
+  // leitura confiável: nota boa e, se não for muito alta, com folga sobre o segundo nome mais parecido
+  const good = s => s.best && s.best.score >= 0.72 && (s.best.score >= 0.85 || s.best.gap >= 0.05);
   // testa a mão com 5, 4, 3, 2 e 1 carta e fica com a quantidade que reconhece mais nomes
   let pick = null;
   for (let n = 5; n >= 1; n--) {
@@ -3180,7 +3202,7 @@ async function scanPrint(file) {
   }
   // segunda passada só nas que falharam, com os tratamentos de letra dourada (Full Art) e clara
   for (let i = 0; i < pick.n; i++) if (!good(pick.slots[i])) {
-    const s = await readSlot(pick.x0, i, ['gold', 'light', 'raw', 'dark']);
+    const s = await readSlot(pick.x0, i, ['gray', 'grayB', 'gold', 'light']);
     if (s.best && (!pick.slots[i].best || s.best.score > pick.slots[i].best.score)) pick.slots[i] = s;
   }
   // leitura fraca vira "não reconheci" (melhor a pessoa escolher a carta do que o Códex mostrar uma carta errada);
@@ -3271,6 +3293,30 @@ const EXAMPLE = (() => {
     const c = computeChains(h); if (!c.length) continue; const s = card(c[0].result).atk + (c[0].steps.length > 1 ? 1000 : 0); if (s > bestS) { bestS = s; best = h; } }
   return best;
 })();
+// quanto um equipamento soma num monstro, pelo texto do próprio equipamento no jogo
+// ("Só pode ser equipado a um monstro THUNDER. O monstro equipado ganha 700 de ATK"); null quando não serve
+const EQ_PT = { 'DRAGÃO': 'dragon', 'DINOSSAURO': 'dinosaur' };
+const EQ_TYPES = new Set(ALL.filter(isMon).map(c => (c.type || '').replace(/[_\-\s]/g, '')));
+const EQ_ATTRS = new Set(['LIGHT', 'DARK', 'EARTH', 'WATER', 'FIRE', 'WIND', 'DIVINE']);
+function equipBonus(eId, mId) {
+  const e = card(eId), m = card(mId); if (e.kind !== 'eq' || !isMon(m)) return null;
+  const d = e.desc || '', g = d.match(/ganha (\d+) de ATK/i); if (!g) return null;
+  const varia = /ganha \d+ de ATK[^.]*para cada/i.test(d);
+  const r = d.match(/S[óo] pode ser equipad[oa]s?\s+(?:a|em|num|numa)?\s*(?:um|uma|1)?\s*(?:monstros?\s+)?([^.;]+)/i);
+  let fits = !r;
+  if (r) {
+    const ty = (m.type || '').replace(/[_\-\s]/g, '');
+    fits = r[1].replace(/["“”]/g, '').split(/,\s*|\s+ou\s+/).map(s => s.trim().toUpperCase()).filter(Boolean).some(T => {
+      const k = (EQ_PT[T] || T).toLowerCase().replace(/[_\-\s]/g, '');
+      // tipo ou elemento (THUNDER, DARK...) vale só pelo tipo/elemento do monstro: "Danger! Thunderbird!" não é Trovão
+      if (EQ_TYPES.has(k) || EQ_ATTRS.has(T)) return k === ty || T === m.attr;
+      // família de cartas (HARPIE LADY, RED-EYES, "Dark Magician"): pela palavra inteira no nome ou no arquétipo
+      const re = new RegExp(`(^|[^A-Z])${T.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^A-Z]|$)`);
+      return re.test(m.name.toUpperCase()) || re.test((m.arch || '').toUpperCase());
+    }) || (equipOn.get(eId) || []).includes(mId);
+  }
+  return fits ? { bonus: +g[1], varia } : null;
+}
 // outras fusões: primeiro as de 2 cartas, em pares; depois as cadeias, na largura toda.
 // Se sobrar uma de 2 cartas sozinha na última fileira, ela fica centralizada (sem espaço vazio de um lado só)
 function otherPlays(rest, playHTML) {
@@ -3287,12 +3333,22 @@ function viewMao() {
   const mons = pool.filter(id => isMon(card(id))).length;
   if (pool.length < 2) res = `<div class="empty">${ICON.cards}<b>Coloque pelo menos duas cartas</b><span>Cole um print do duelo aqui em cima ou escolha as cartas nos espaços.</span></div>`;
   else {
-    const chains = computeChains(pool); const strongestAtk = Math.max(0, ...pool.map(id => isMon(card(id)) ? card(id).atk : 0));
-    if (!chains.length) res = `<div class="alert" role="alert"><span class="ai">!</span><h3>Nenhuma fusão com essas cartas</h3>
-      <p>${mons < 2 ? `Só ${mons === 1 ? 'uma carta é monstro' : 'nenhuma carta é monstro'} na sua mão. Magias, armadilhas e equipamentos não entram em fusão.` : `Esses ${mons} monstros não combinam entre si.`} Se tiver um monstro no seu campo, coloque ele no último espaço: ele também pode fundir.</p></div>`;
-    else {
-      const playHTML = (ch, size) => { const gain = card(ch.result).atk - strongestAtk; const order = [ch.start, ...ch.steps.map(s => s[0])].map(id => esc(card(id).name)).join(', depois ');
-        return `<div class="play" style="display:grid;gap:12px">${equation(ch.start, ch.steps, size)}<div class="row" style="color:var(--muted);font-size:14px">${gain > 0 ? `<span class="pill good">+${gain} de ATK</span>` : `<span class="pill flat">não ganha ATK</span>`}${ch.steps.length > 1 ? `<span class="pill gold">cadeia de ${ch.steps.length + 1} cartas</span>` : ''}<span>Jogue nesta ordem: <b style="color:var(--sand)">${order}</b></span></div></div>`; };
+    // combo: o equipamento da mão que serve no monstro final entra por último na mesma jogada e soma o ATK dele
+    const eqHand = pool.filter(id => card(id).kind === 'eq');
+    const bestEq = r => { let b = null; for (const e of eqHand) { const x = equipBonus(e, r); if (x && (!b || x.bonus > b.bonus)) b = { id: e, ...x }; } return b; };
+    const finalAtk = ch => card(ch.result).atk + (ch.eq ? ch.eq.bonus : 0);
+    const chains = computeChains(pool).map(ch => ({ ...ch, eq: bestEq(ch.result) })).sort((a, b) => finalAtk(b) - finalAtk(a) || a.steps.length - b.steps.length);
+    const strongestAtk = Math.max(0, ...pool.map(id => isMon(card(id)) ? card(id).atk : 0));
+    if (!chains.length) {
+      // sem fusão, mas com equipamento que serve num monstro da mão: dá a dica de equipar
+      let tip = null; for (const m of pool.filter(id => isMon(card(id)))) { const e = bestEq(m); if (e && (!tip || card(m).atk + e.bonus > tip.atk)) tip = { m, e, atk: card(m).atk + e.bonus }; }
+      res = `<div class="alert" role="alert"><span class="ai">!</span><h3>Nenhuma fusão com essas cartas</h3>
+      <p>${mons < 2 ? `Só ${mons === 1 ? 'uma carta é monstro' : 'nenhuma carta é monstro'} na sua mão. Magias, armadilhas e equipamentos não entram em fusão.` : `Esses ${mons} monstros não combinam entre si.`} Se tiver um monstro no seu campo, coloque ele no último espaço: ele também pode fundir.</p>
+      ${tip ? `<p><b style="color:var(--gold)">Dica:</b> equipe <b>${esc(card(tip.e.id).name)}</b> em <b>${esc(card(tip.m).name)}</b>: ATK ${card(tip.m).atk} → ${tip.atk}${tip.e.varia ? ' ou mais' : ''}.</p>` : ''}</div>`;
+    } else {
+      const playHTML = (ch, size) => { const gain = finalAtk(ch) - strongestAtk; const order = [ch.start, ...ch.steps.map(s => s[0]), ...(ch.eq ? [ch.eq.id] : [])].map(id => esc(card(id).name)).join(', depois ');
+        const combo = ch.eq ? `<div class="combo">${op('+', true)}${thumb(ch.eq.id)}<span><b>Combo:</b> escolha <b>${esc(card(ch.eq.id).name)}</b> por último, na mesma jogada. ${esc(card(ch.result).name)} sai com <b style="color:var(--atk)">ATK ${finalAtk(ch)}</b>${ch.eq.varia ? ' ou mais' : ''} (+${ch.eq.bonus}).</span></div>` : '';
+        return `<div class="play" style="display:grid;gap:12px">${equation(ch.start, ch.steps, size)}${combo}<div class="row" style="color:var(--muted);font-size:14px">${gain > 0 ? `<span class="pill good">+${gain} de ATK</span>` : `<span class="pill flat">não ganha ATK</span>`}${ch.steps.length > 1 ? `<span class="pill gold">cadeia de ${ch.steps.length + 1} cartas</span>` : ''}${ch.eq ? `<span class="pill gold">combo com equipamento</span>` : ''}<span>Jogue nesta ordem: <b style="color:var(--sand)">${order}</b></span></div></div>`; };
       const [first, ...rest] = chains;
       res = `<div class="tablet sec"><div class="head"><h2>Melhor jogada</h2></div>${playHTML(first, 'm')}</div>
         ${rest.length ? `<div class="sec"><div class="head"><h2>Outras fusões possíveis<span class="count">${rest.length}</span></h2></div><div class="list two">${otherPlays(rest, playHTML)}</div></div>` : ''}`;
@@ -3391,7 +3447,18 @@ function viewCarta(id) {
   ${equipPart}`);
   document.getElementById('add').onclick = () => { let i = hand.slice(0, 5).findIndex(v => !v); if (i < 0) i = 4; hand[i] = id; saveHand(); go('mao'); };
   const ad = document.getElementById('adddeck'); if (ad) ad.onclick = () => chooseDeck(id);
-  view.querySelectorAll('[data-art]').forEach(b => b.onclick = () => { const img = document.getElementById('bigimg'); img.src = b.dataset.art === 'hd' ? hdImg(c) : gameImg(c); view.querySelectorAll('[data-art]').forEach(x => x.setAttribute('aria-pressed', x === b)); });
+  // troca entre a carta oficial e a arte do jogo; a cada troca a imagem volta ao estado limpo
+  // (antes, depois de uma falha de carregamento a imagem ficava escondida e as trocas seguintes davam tela preta)
+  const showArt = hd => {
+    const img = document.getElementById('bigimg'); if (!img) return;
+    img.style.visibility = ''; delete img.dataset.tried;
+    img.dataset.alt = hd ? gameImg(c) : hdImg(c);
+    img.src = hd ? hdImg(c) : gameImg(c);
+    view.querySelectorAll('[data-art]').forEach(x => x.setAttribute('aria-pressed', String((x.dataset.art === 'hd') === hd)));
+  };
+  view.querySelectorAll('[data-art]').forEach(b => b.onclick = () => showArt(b.dataset.art === 'hd'));
+  // sem a imagem oficial no computador (pasta "cartas"), o botão "Carta oficial" sai e fica só a arte do jogo
+  if (c.ygo && c.slug) { const t = new Image(); t.onerror = () => { const sw = view.querySelector('.artswitch'); if (sw) sw.remove(); showArt(false); }; t.src = hdImg(c); }
 }
 
 /* ===================== duelistas e boosters ===================== */
