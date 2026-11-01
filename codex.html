@@ -210,6 +210,13 @@ h3 { margin: 0; font-size: 18px; font-weight: 900; }
 /* combo com equipamento: faixa dourada logo abaixo da fusão */
 .combo { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; padding: 10px 14px; border-radius: 14px; border: 1px dashed var(--gold2); background: rgba(232, 190, 88, .08); font-size: 14.5px; }
 .combo > span:last-child { max-width: 46ch; text-align: left; }
+.combo.campo { border-color: #5BE39A; background: rgba(91, 227, 154, .07); }
+/* resultado final da jogada com campo/equipamento: o número que importa, em destaque */
+.total { justify-self: center; display: grid; justify-items: center; gap: 2px; padding: 10px 22px; border-radius: 14px; background: linear-gradient(180deg, rgba(232, 190, 88, .18), rgba(232, 190, 88, .06)); border: 1px solid var(--gold); font-size: 16px; }
+.total b { color: var(--gold); font-size: 22px; font-family: var(--f-display); }
+.total small { color: var(--muted); font-weight: 700; }
+.soloTip { margin-top: 4px; padding: 12px 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--night2); color: var(--sand); font-size: 14.5px; max-width: 70ch; justify-self: center; text-align: center; }
+.soloTip b { color: var(--gold); }
 .list.two > .panel.solo { grid-column: 1 / -1; justify-self: center; width: min(100%, 640px); }
 .list.two > .panel.wide .eq { flex-wrap: wrap; justify-content: center; }
 .op { width: 50px; height: 50px; border-radius: 50%; flex: none; display: grid; place-items: center; font: 900 34px/1 var(--f-body); }
@@ -590,7 +597,10 @@ dialog.small .pk { gap: 14px; }
 .mname { font: 900 15px var(--f-display); color: var(--gold); background: linear-gradient(180deg, #2A292D, #151417); border: 1px solid rgba(232, 190, 88, .5); border-radius: 3px; padding: 5px 8px; letter-spacing: .03em; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 0 #000, 0 0 12px rgba(232, 190, 88, .35); }
 .mart { display: block; position: relative; aspect-ratio: 1; overflow: hidden; border: 2px solid #0B0B0C; background: #0F0F11; box-shadow: 0 0 0 1px rgba(232, 190, 88, .7); }
 /* mostra só a ilustração da carta oficial (a arte fica entre 18% e 65% da altura do card) */
-.mart img { width: 100%; height: 100%; object-fit: cover; object-position: center 23%; transform: scale(1.5); display: block; }
+/* recorte exato da janela da ilustração da carta oficial (421×614: ilustração de x 50 a 371 e y 111 a 432),
+   sem zoom no chute: a arte aparece inteira, do jeito que está impressa na carta */
+.mart img { position: absolute; width: 131.15%; height: auto; left: -15.58%; top: -34.58%; max-width: none; display: block; }
+.mart img.fl { width: 100%; height: 100%; left: 0; top: 0; object-fit: cover; object-position: center 28%; transform: scale(1.35); }
 .mtext { position: relative; z-index: 1; background: linear-gradient(180deg, #1E1D21, #141416); color: var(--sand); border: 1px solid rgba(232, 190, 88, .32); border-radius: 3px; padding: 7px 8px 8px; font-size: 12.5px; line-height: 1.35; display: grid; gap: 3px; align-content: start; min-height: 74px; }
 .mtext b { font: 700 11.5px var(--f-display); color: var(--gold); }
 .mattr { background: #0B0B0C; box-shadow: 0 0 0 1px rgba(232, 190, 88, .6); }
@@ -803,6 +813,16 @@ footer .credit b { color: var(--gold); }
 .hh-text .quick { flex-wrap: nowrap; }
 .hh-text .quick > .btn { flex: 1 1 auto; justify-content: center; white-space: nowrap; }
 @media (max-width: 600px) { .hh-text .quick { flex-wrap: wrap; } }
+/* Full Art: botão na ficha da carta e vitrine nos boosters, com o brilho holográfico das cartas raras */
+.artswitch button.fa { border-color: rgba(240, 140, 245, .55); }
+.artswitch button.fa[aria-pressed="true"] { color: #F6B8FA; border-color: #F08CF5; box-shadow: 0 0 14px rgba(240, 140, 245, .35); }
+.fagrid { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; }
+.facard { width: 170px; display: grid; gap: 8px; justify-items: center; background: none; border: 0; padding: 0; color: var(--sand); font-weight: 900; font-size: 13px; text-align: center; }
+.facard img { width: 100%; aspect-ratio: 256/374; object-fit: cover; border-radius: 10px; box-shadow: 0 14px 30px rgba(0, 0, 0, .55), 0 0 0 1px rgba(240, 140, 245, .5), 0 0 22px rgba(240, 140, 245, .2); transition: transform .25s ease, box-shadow .25s ease; }
+.facard:hover img { transform: translateY(-6px) scale(1.03); box-shadow: 0 20px 40px rgba(0, 0, 0, .6), 0 0 0 2px #F08CF5, 0 0 34px rgba(240, 140, 245, .4); }
+.fusewrap { display: grid; justify-items: center; gap: 4px; min-width: 0; }
+.fusecap { margin: 0; text-align: center; font-size: 14.5px; color: var(--sand); display: grid; gap: 2px; }
+.fusecap b { color: var(--gold); } .fusecap small { color: var(--muted); font-weight: 700; }
 /* ---------- olho dos dois lados do título ---------- */
 .head h2::after { content: ""; display: inline-block; width: 28px; height: 16px; margin-left: 10px; vertical-align: 2px;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 32'%3E%3Cpath d='M4 16 Q28 -2 52 16 Q28 34 4 16 Z' fill='none' stroke='%23F1C24A' stroke-width='3'/%3E%3Ccircle cx='28' cy='16' r='6' fill='%23F1C24A'/%3E%3C/svg%3E") center / contain no-repeat; }
@@ -2549,7 +2569,9 @@ const LIMITE_PADRAO=3;
 <script>
 /* ===================== dados ===================== */
 const SITE = 'https://forbiddenlegacy.com.br/';
-const IMG = SITE + 'img/';   // arte do jogo, ícones, retratos e pacotes: site do Forbidden Legacy (precisa de internet)
+// arte do jogo, ícones, retratos e pacotes: do site do Forbidden Legacy. Aberto pelo programa instalado (?local=1),
+// usa a cópia baixada na pasta img/ do Códex e funciona sem internet; o que faltar lá, busca no site
+const IMG = /[?&]local=1/.test(location.search) ? 'img/' : SITE + 'img/';
 const LOCAL = 'cartas/';     // cartas oficiais em alta, baixadas para a pasta do guia (só no cabeçalho da carta)
 const TYPE_PT = { dragon: 'Dragão', spellcaster: 'Mago', zombie: 'Zumbi', warrior: 'Guerreiro', beastwarrior: 'Besta-Guerreira', beast: 'Besta', winged_beast: 'Besta Alada', fiend: 'Demônio', fairy: 'Fada', insect: 'Inseto', dinosaur: 'Dinossauro', reptile: 'Réptil', fish: 'Peixe', seaserpent: 'Serpente Marinha', machine: 'Máquina', thunder: 'Trovão', aqua: 'Aqua', pyro: 'Piro (fogo)', rock: 'Rocha', plant: 'Planta', 'divine-beast': 'Besta Divina' };
 const TYPE_EN = { dragon: 'DRAGON', spellcaster: 'SPELLCASTER', zombie: 'ZOMBIE', warrior: 'WARRIOR', beastwarrior: 'BEAST-WARRIOR', beast: 'BEAST', winged_beast: 'WINGED BEAST', fiend: 'FIEND', fairy: 'FAIRY', insect: 'INSECT', dinosaur: 'DINOSAUR', reptile: 'REPTILE', fish: 'FISH', seaserpent: 'SEA SERPENT', machine: 'MACHINE', thunder: 'THUNDER', aqua: 'AQUA', pyro: 'PYRO', rock: 'ROCK', plant: 'PLANT', 'divine-beast': 'DIVINE-BEAST' };
@@ -2616,7 +2638,7 @@ const typeIcon = c => isMon(c) ? `${IMG}tipos/${c.type}.webp` : `${IMG}tipos/${K
 const typeName = c => isMon(c) ? (TYPE_PT[c.type] || c.type) : KIND_PT[c.kind];
 const attrIcon = c => isMon(c) && c.attr ? `${IMG}atributos/${c.attr}.webp` : null;
 const npcImg = n => `${IMG}Npcs/${NPCS[n][2]}.webp`;
-const packImg = b => SITE + BOOSTERS[b][6];
+const packImg = b => BOOSTERS[b][6].startsWith('img/') ? IMG + BOOSTERS[b][6].slice(4) : SITE + BOOSTERS[b][6];
 const ptName = c => c.pt && c.pt.toLowerCase() !== c.name.toLowerCase() ? c.pt : '';
 const isEffect = c => /^EFEITO:/i.test(c.desc || '');
 const cleanDesc = c => (c.desc || '').replace(/^EFEITO:\s*/i, '');
@@ -2732,7 +2754,9 @@ function logoSVG(size, uid) {
 }
 document.addEventListener('error', e => {
   const t = e.target; if (t.tagName !== 'IMG') return;
-  if (t.dataset.alt && !t.dataset.tried && t.src !== t.dataset.alt) { t.dataset.tried = '1'; t.src = t.dataset.alt; return; }
+  if (t.dataset.alt && !t.dataset.tried && t.src !== t.dataset.alt) { t.dataset.tried = '1'; if (t.closest('.mart')) t.classList.add('fl'); t.src = t.dataset.alt; return; }
+  // imagem do jogo guardada no computador que faltou (instalação sem internet incompleta): busca no site do jogo
+  if (IMG !== SITE + 'img/' && t.src.includes('/img/') && !t.dataset.web) { t.dataset.web = '1'; t.src = SITE + 'img/' + t.src.split('/img/').pop(); return; }
   if (t.classList.contains('logo')) { t.replaceWith(Object.assign(document.createElement('div'), { className: 'logo-fb', textContent: 'Forbidden Legacy' })); return; }
   const holder = t.closest('.pic, .thumb, .dcard'); if (holder) holder.classList.add('noimg'); else t.style.visibility = 'hidden';
 }, true);
@@ -2982,7 +3006,7 @@ function viewInicio() {
       <p>Mande o print do duelo. O Códex lê as cartas da sua mão, testa todas as combinações e mostra a fusão mais forte, na ordem certa para jogar.</p>
       <div class="flow"><span class="stepchip"><b>1</b> Print <span class="keys"><kbd>PrtSc</kbd></span></span><span class="arrow">➜</span><span class="stepchip"><b>2</b> Cole <span class="keys"><kbd>Ctrl</kbd><kbd>V</kbd></span></span><span class="arrow">➜</span><span class="stepchip"><b>3</b> Jogue</span></div>
       <button class="btn gold" type="button" data-go="mao">${ICON.camera}Abrir a calculadora</button></div>
-    ${fusePair()}</div></section>
+    <div class="fusewrap">${fusePair()}${(() => { const [x, y, r] = dailyFusion(); return `<p class="fusecap"><b>Fusão de hoje:</b> ${esc(card(x).name)} + ${esc(card(y).name)} = <button type="button" class="linkish" data-card="${r}">${esc(card(r).name)}</button><small>Amanhã aparece outra.</small></p>`; })()}</div></div></section>
   <section class="sec"><div class="head"><h2>Como a fusão funciona</h2></div>
     <div class="steps">
       <div class="panel step"><span class="num">1</span><div class="art">${thumb(4)}${op('+', true)}${thumb(458)}</div><h3>Escolha duas cartas</h3><p>Na sua vez, junte duas cartas da mão, ou uma da mão com o monstro que já está em campo.</p></div>
@@ -3045,7 +3069,7 @@ function viewLista(k, arg) {
   let list, title, icon;
   if (k === 'tipo') { list = ALL.filter(c => isMon(c) && c.type === arg); title = TYPE_PT[arg]; icon = `${IMG}tipos/${arg}.webp`; }
   else if (k === 'elem') { list = ALL.filter(c => isMon(c) && c.attr === arg); title = ATTR_PT[arg]; icon = `${IMG}atributos/${arg}.webp`; }
-  else { list = ALL.filter(c => c.kind === arg); title = KIND_PLURAL[arg]; icon = `${IMG}tipos/${KIND_ICON[arg]}.webp`; }
+  else { list = ALL.filter(c => c.kind === arg); title = KIND_PLURAL[arg]; icon = `${IMG}tipos/${KIND_ICON[arg] || 'dragon'}.webp`; }
   const total = list.length; const top = list.slice().sort((a, b) => b.atk - a.atk)[0];
   if (listState.rar) list = list.filter(c => c.rar === listState.rar);
   list.sort(listState.sort === 'nome' ? (a, b) => a.name.localeCompare(b.name) : (a, b) => b.atk - a.atk || a.name.localeCompare(b.name));
@@ -3347,6 +3371,16 @@ function equipBonus(eId, mId) {
   }
   return fits ? { bonus: +g[1], varia } : null;
 }
+// quanto uma carta de campo soma (ou tira) do ATK de um monstro, pelo texto do campo no jogo:
+// "Todos os monstros WINGED BEAST no campo ganham 700 de ATK" ou, no Forest, "AUMENTA 700 para INSECT / PLANT"
+function fieldBonus(fId, mId) {
+  const d = (card(fId).desc || '').toUpperCase(), m = card(mId); if (!isMon(m)) return 0;
+  const ty = (m.type || '').replace(/[_\-\s]/g, ''), has = list => list.split(/,|\/|\s+E\s+/).map(s => s.trim().replace(/[_\-\s]/g, '').toLowerCase()).filter(Boolean).some(k => k === ty || (EQ_PT[k.toUpperCase()] || '') === ty);
+  let total = 0;
+  for (const x of d.matchAll(/MONSTROS ([A-Z\-,\/ ]+?) NO CAMPO (GANHAM|PERDEM) (\d+) DE ATK/g)) if (has(x[1])) total += (x[2] === 'GANHAM' ? 1 : -1) * +x[3];
+  for (const x of d.matchAll(/(\d+) PARA ([A-Z\-\/ ]+?)(?= E \d|$)/g)) if (has(x[2])) total += +x[1];
+  return total;
+}
 // outras fusões: primeiro as de 2 cartas, em pares; depois as cadeias, na largura toda.
 // Se sobrar uma de 2 cartas sozinha na última fileira, ela fica centralizada (sem espaço vazio de um lado só)
 function otherPlays(rest, playHTML) {
@@ -3366,8 +3400,11 @@ function viewMao() {
     // combo: o equipamento da mão que serve no monstro final entra por último na mesma jogada e soma o ATK dele
     const eqHand = pool.filter(id => card(id).kind === 'eq');
     const bestEq = r => { let b = null; for (const e of eqHand) { const x = equipBonus(e, r); if (x && (!b || x.bonus > b.bonus)) b = { id: e, ...x }; } return b; };
-    const finalAtk = ch => card(ch.result).atk + (ch.eq ? ch.eq.bonus : 0);
-    const chains = computeChains(pool).map(ch => ({ ...ch, eq: bestEq(ch.result) })).sort((a, b) => finalAtk(b) - finalAtk(a) || a.steps.length - b.steps.length);
+    // campo: a carta de campo da mão que fortalece o monstro final é jogada antes da fusão, no mesmo turno
+    const fieldHand = pool.filter(id => card(id).kind === 'campo');
+    const bestField = r => { let b = null; for (const f of fieldHand) { const x = fieldBonus(f, r); if (x > 0 && (!b || x > b.bonus)) b = { id: f, bonus: x }; } return b; };
+    const finalAtk = ch => card(ch.result).atk + (ch.eq ? ch.eq.bonus : 0) + (ch.field ? ch.field.bonus : 0);
+    const chains = computeChains(pool).map(ch => ({ ...ch, eq: bestEq(ch.result), field: bestField(ch.result) })).sort((a, b) => finalAtk(b) - finalAtk(a) || a.steps.length - b.steps.length);
     const strongestAtk = Math.max(0, ...pool.map(id => isMon(card(id)) ? card(id).atk : 0));
     if (!chains.length) {
       // sem fusão, mas com equipamento que serve num monstro da mão: dá a dica de equipar
@@ -3376,11 +3413,20 @@ function viewMao() {
       <p>${mons < 2 ? `Só ${mons === 1 ? 'uma carta é monstro' : 'nenhuma carta é monstro'} na sua mão. Magias, armadilhas e equipamentos não entram em fusão.` : `Esses ${mons} monstros não combinam entre si.`} Se tiver um monstro no seu campo, coloque ele no último espaço: ele também pode fundir.</p>
       ${tip ? `<p><b style="color:var(--gold)">Dica:</b> equipe <b>${esc(card(tip.e.id).name)}</b> em <b>${esc(card(tip.m).name)}</b>: ATK ${card(tip.m).atk} → ${tip.atk}${tip.e.varia ? ' ou mais' : ''}.</p>` : ''}</div>`;
     } else {
-      const playHTML = (ch, size) => { const gain = finalAtk(ch) - strongestAtk; const order = [ch.start, ...ch.steps.map(s => s[0]), ...(ch.eq ? [ch.eq.id] : [])].map(id => esc(card(id).name)).join(', depois ');
-        const combo = ch.eq ? `<div class="combo">${op('+', true)}${thumb(ch.eq.id)}<span><b>Combo:</b> escolha <b>${esc(card(ch.eq.id).name)}</b> por último, na mesma jogada. ${esc(card(ch.result).name)} sai com <b style="color:var(--atk)">ATK ${finalAtk(ch)}</b>${ch.eq.varia ? ' ou mais' : ''} (+${ch.eq.bonus}).</span></div>` : '';
-        return `<div class="play" style="display:grid;gap:12px">${equation(ch.start, ch.steps, size)}${combo}<div class="row" style="color:var(--muted);font-size:14px">${gain > 0 ? `<span class="pill good">+${gain} de ATK</span>` : `<span class="pill flat">não ganha ATK</span>`}${ch.steps.length > 1 ? `<span class="pill gold">cadeia de ${ch.steps.length + 1} cartas</span>` : ''}${ch.eq ? `<span class="pill gold">combo com equipamento</span>` : ''}<span>Jogue nesta ordem: <b style="color:var(--sand)">${order}</b></span></div></div>`; };
+      const playHTML = (ch, size) => { const gain = finalAtk(ch) - strongestAtk;
+        const order = [...(ch.field ? [ch.field.id] : []), ch.start, ...ch.steps.map(s => s[0]), ...(ch.eq ? [ch.eq.id] : [])].map(id => esc(card(id).name)).join(', depois ');
+        const base = card(ch.result).atk, nm = esc(card(ch.result).name);
+        const field = ch.field ? `<div class="combo campo">${thumb(ch.field.id)}<span><b>Antes da fusão:</b> jogue o campo <b>${esc(card(ch.field.id).name)}</b>. Ele fortalece ${nm}: <b style="color:var(--atk)">+${ch.field.bonus} de ATK</b>.</span></div>` : '';
+        const combo = ch.eq ? `<div class="combo">${op('+', true)}${thumb(ch.eq.id)}<span><b>Combo:</b> escolha <b>${esc(card(ch.eq.id).name)}</b> por último, na mesma jogada: <b style="color:var(--atk)">+${ch.eq.bonus} de ATK</b>${ch.eq.varia ? ' ou mais' : ''}.</span></div>` : '';
+        const total = ch.field || ch.eq ? `<div class="total">${nm} sai com <b>ATK ${finalAtk(ch)}</b><small>${base}${ch.field ? ` + ${ch.field.bonus} do campo` : ''}${ch.eq ? ` + ${ch.eq.bonus} do equipamento` : ''}</small></div>` : '';
+        return `<div class="play" style="display:grid;gap:12px">${field}${equation(ch.start, ch.steps, size)}${combo}${total}<div class="row" style="color:var(--muted);font-size:14px">${gain > 0 ? `<span class="pill good">+${gain} de ATK sobre o seu monstro mais forte</span>` : ''}${ch.steps.length > 1 ? `<span class="pill gold">cadeia de ${ch.steps.length + 1} cartas</span>` : ''}<span>Jogue nesta ordem: <b style="color:var(--sand)">${order}</b></span></div></div>`; };
       const [first, ...rest] = chains;
-      res = `<div class="tablet sec"><div class="head"><h2>Melhor jogada</h2></div>${playHTML(first, 'm')}</div>
+      // se um monstro da mão sozinho é mais forte que a melhor fusão, avisa com clareza (em vez de "não ganha ATK")
+      // (conta também o campo e o equipamento que esse monstro sozinho receberia)
+      const solos = pool.filter(id => isMon(card(id))).map(m => { const f = bestField(m), e = bestEq(m); return { m, f, e, atk: card(m).atk + (f ? f.bonus : 0) + (e ? e.bonus : 0) }; }).sort((a, b) => b.atk - a.atk);
+      const solo = solos[0];
+      const soloTip = solo && solo.atk > finalAtk(first) ? `<div class="soloTip"><b>Vale saber:</b> ${esc(card(solo.m).name)}, que já está na sua mão, ${solo.f || solo.e ? `com ${[solo.f, solo.e].filter(Boolean).map(x => esc(card(x.id).name)).join(' e ')} fica com <b>ATK ${solo.atk}</b>` : `tem <b>ATK ${solo.atk}</b>`}: mais forte que esta fusão. Para atacar forte, jogue ele sozinho. A fusão serve para guardar cartas ou montar defesa.</div>` : '';
+      res = `<div class="tablet sec"><div class="head"><h2>Melhor jogada</h2></div>${playHTML(first, 'm')}${soloTip}</div>
         ${rest.length ? `<div class="sec"><div class="head"><h2>Outras fusões possíveis<span class="count">${rest.length}</span></h2></div><div class="list two">${otherPlays(rest, playHTML)}</div></div>` : ''}`;
     }
   }
@@ -3453,7 +3499,7 @@ function viewCarta(id) {
   })();
   const typeLine = isMon(c) ? `[ ${TYPE_PT[c.type] || c.type}${isEffect(c) ? ' / Efeito' : ''} ]` : `[ Carta de ${KIND_PT[c.kind]} ]`;
   const left = `<div><div class="zone"><div class="bigcard">${hasImg(c) ? `<img id="bigimg" src="${hdImg(c)}" data-alt="${gameImg(c)}" alt="${esc(c.name)}">` : ''}</div></div>
-    ${c.ygo && c.slug ? `<div class="artswitch"><button type="button" aria-pressed="true" data-art="hd">Carta oficial</button><button type="button" aria-pressed="false" data-art="jogo">Arte do jogo</button></div>` : ''}</div>`;
+    ${c.slug && (c.ygo || FA_SIG.has(c.id)) ? `<div class="artswitch">${c.ygo ? `<button type="button" aria-pressed="true" data-art="hd">Carta oficial</button>` : ''}<button type="button" aria-pressed="${c.ygo ? 'false' : 'true'}" data-art="jogo">Arte do jogo</button>${FA_SIG.has(c.id) ? `<button type="button" aria-pressed="false" data-art="full" class="fa">✦ Full Art</button>` : ''}</div>` : ''}</div>`;
   const info = `
     <div class="crumbs"><span>${c.num ? `Carta nº ${c.num}` : 'Carta nova do Forbidden Legacy'}</span>${c.rar ? `<span class="rar r-${c.rar}">${c.rar}</span><span>${RAR_PT[c.rar]}</span>` : ''}${c.flid ? `<span>· até ${limitOf(c)} no deck</span>` : ''}</div>
     <h1 class="cname">${esc(c.name)}</h1>${pt ? `<p class="cpt">(${esc(pt)})</p>` : ''}
@@ -3479,16 +3525,18 @@ function viewCarta(id) {
   const ad = document.getElementById('adddeck'); if (ad) ad.onclick = () => chooseDeck(id);
   // troca entre a carta oficial e a arte do jogo; a cada troca a imagem volta ao estado limpo
   // (antes, depois de uma falha de carregamento a imagem ficava escondida e as trocas seguintes davam tela preta)
-  const showArt = hd => {
+  // três versões: carta oficial (em alta), arte do jogo e a Full Art do jogo (quando a carta tem)
+  const ART_SRC = { hd: () => hdImg(c), jogo: () => gameImg(c), full: () => `${IMG}cartas_full_grande/${c.slug}.webp` };
+  const showArt = k => {
     const img = document.getElementById('bigimg'); if (!img) return;
-    img.style.visibility = ''; delete img.dataset.tried;
-    img.dataset.alt = hd ? gameImg(c) : hdImg(c);
-    img.src = hd ? hdImg(c) : gameImg(c);
-    view.querySelectorAll('[data-art]').forEach(x => x.setAttribute('aria-pressed', String((x.dataset.art === 'hd') === hd)));
+    img.style.visibility = ''; delete img.dataset.tried; delete img.dataset.web;
+    img.dataset.alt = k === 'jogo' ? (c.ygo ? hdImg(c) : '') : gameImg(c);
+    img.src = ART_SRC[k]();
+    view.querySelectorAll('[data-art]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.art === k)));
   };
-  view.querySelectorAll('[data-art]').forEach(b => b.onclick = () => showArt(b.dataset.art === 'hd'));
-  // sem a imagem oficial no computador (pasta "cartas"), o botão "Carta oficial" sai e fica só a arte do jogo
-  if (c.ygo && c.slug) { const t = new Image(); t.onerror = () => { const sw = view.querySelector('.artswitch'); if (sw) sw.remove(); showArt(false); }; t.src = hdImg(c); }
+  view.querySelectorAll('[data-art]').forEach(b => b.onclick = () => showArt(b.dataset.art));
+  // sem a imagem oficial no computador (pasta "cartas"), o botão "Carta oficial" sai e fica a arte do jogo
+  if (c.ygo && c.slug) { const t = new Image(); t.onerror = () => { const hb = view.querySelector('[data-art="hd"]'); if (hb) hb.remove(); if (!view.querySelector('[data-art="full"]')) view.querySelector('.artswitch')?.remove(); showArt('jogo'); }; t.src = hdImg(c); }
 }
 
 /* ===================== duelistas e boosters ===================== */
@@ -3525,7 +3573,8 @@ function viewBooster(i) {
     <p class="sub">${esc(b[3])}</p><div class="row"><span class="pill"><span class="souls">${b[5]} Souls</span></span>${b[7] ? `<span class="pill gold">UR garantida a cada ${b[7]} aberturas</span>` : ''}<span class="pill">${fmt(all.length)} cartas</span></div>
     <div class="row">${['UR', 'SR', 'R', 'N'].map(r => `<span class="pill"><span class="rar r-${r}">${r}</span> ${counts[r]}</span>`).join('')}</div>` }) + page(`
   ${best ? `<section class="sec"><div class="head"><h2>A fusão mais forte com cartas deste booster</h2></div><div class="tablet">${equation(best[0], [[best[1], best[2]]], 'm')}</div></section>` : ''}
-  <section class="sec"><div class="head"><h2>O que pode sair</h2></div>${tiers(all)}</section>`);
+  <section class="sec"><div class="head"><h2>O que pode sair</h2></div>${tiers(all)}</section>
+  ${(() => { const fa = all.filter(id => FA_SIG.has(id)).sort(byStrength); return fa.length ? `<section class="sec"><div class="head"><h2>Têm versão Full Art<span class="count">${fa.length}</span></h2><p class="sub">Cartas deste booster que também existem em Full Art no jogo, com a arte cobrindo a carta inteira.</p></div><div class="fagrid">${fa.map(id => `<button type="button" class="facard" data-card="${id}" title="${esc(card(id).name)}"><img src="${IMG}cartas_full_grande/${card(id).slug}.webp" alt="${esc(card(id).name)} em Full Art" loading="lazy"><span>${esc(card(id).name)}</span></button>`).join('')}</div></section>` : ''; })()}`);
 }
 
 /* ===================== vitrine: rankings e decks ===================== */
