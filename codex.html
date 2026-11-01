@@ -2691,7 +2691,7 @@ function toast(msg, err) {
   clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2600);
 }
 // versão desta montagem (a mesma do versao.txt que o programa instalado usa para se atualizar)
-const VERSAO = '2026.10.31-2219';
+const VERSAO = '2026.10.31-2246';
 // link de convite do servidor do Discord do Códex (vazio = o botão de reportar só copia o texto)
 const DISCORD_CONVITE = '';
 const store = {
@@ -2798,6 +2798,9 @@ document.addEventListener('error', e => {
   // imagem do jogo guardada no computador que faltou (instalação sem internet incompleta): busca no site do jogo
   if (IMG !== SITE + 'img/' && t.src.includes('/img/') && !t.dataset.web) { t.dataset.web = '1'; t.src = SITE + 'img/' + t.src.split('/img/').pop(); return; }
   if (t.classList.contains('logo')) { t.replaceWith(Object.assign(document.createElement('div'), { className: 'logo-fb', textContent: 'Forbidden Legacy' })); return; }
+  // Full Art da ficha que não está no computador e que o site do jogo também não entregou: aviso claro, sem culpar a internet
+  const bc = t.id === 'bigimg' && t.closest('.bigcard');
+  if (bc && bc.dataset.modo === 'full') { bc.dataset.msg = IMG === SITE + 'img/' ? 'Não consegui carregar a Full Art: o site do jogo não respondeu agora. Tente de novo mais tarde.' : 'A Full Art desta carta ainda não foi baixada para o seu computador e o site do jogo não respondeu agora. Para guardá-la, abra o instalador de novo quando o site voltar.'; bc.classList.add('nofa'); return; }
   const holder = t.closest('.pic, .thumb, .dcard'); if (holder) holder.classList.add('noimg'); else t.style.visibility = 'hidden';
 }, true);
 
@@ -3585,8 +3588,7 @@ function viewCarta(id) {
     // carta sem Full Art no jogo: mostra a arte do jogo escurecida e borrada, com o aviso por cima
     const bc = img.closest('.bigcard'), semFull = k === 'full' && !FA_SIG.has(c.id);
     bc.classList.toggle('nofa', semFull); bc.dataset.msg = 'Esta carta ainda não tem versão Full Art no jogo';
-    // Full Art que não carregou (sem internet ou site fora do ar): avisa, em vez de mostrar outra arte sem dizer nada
-    img.onerror = k === 'full' && !semFull ? () => { bc.dataset.msg = 'Não consegui carregar a Full Art agora. Confira a internet e tente de novo.'; bc.classList.add('nofa'); img.onerror = null; } : null;
+    bc.dataset.modo = k;   // o tratador de imagens usa isto para avisar quando a Full Art não carrega
     if (semFull) { view.querySelectorAll('[data-art]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.art === k))); if (!/cartas_grande/.test(img.src)) { delete img.dataset.tried; img.style.visibility = ''; img.src = gameImg(c); } return; }
     img.style.visibility = ''; delete img.dataset.tried; delete img.dataset.web;
     img.dataset.alt = k === 'jogo' ? (c.ygo ? hdImg(c) : '') : k === 'full' ? '' : gameImg(c); if (k === 'full') img.dataset.tried = '1';
@@ -3886,7 +3888,8 @@ const NOVIDADES = [
     'Combo com equipamento e carta de campo na melhor jogada, com o ATK final em destaque.',
     'As dicas de equipamento só aparecem quando funcionam de verdade no monstro.',
     'Botão Full Art na ficha de cada carta e vitrine de Full Art nos boosters.',
-    'Botão para reportar problemas, aqui embaixo, no fim de cada página.'] }
+    'Botão para reportar problemas, aqui embaixo, no fim de cada página.',
+    'Aviso mais claro quando uma Full Art ainda não está no seu computador.'] }
 ];
 function mostrarNovidades() {
   if (VERSAO.startsWith('%%')) return;
